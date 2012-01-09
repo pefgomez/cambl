@@ -1867,7 +1867,7 @@ the stream stops and the invalid character is put back."
     (multiple-value-bind (new-root node-deleted-p)
 	(rbt:delete-item fixed-time (get-price-history commodity)
 			 :key #'pricing-entry-moment
-			 :test-equal #'timestamp= #'timestamp<)
+			 :test-equal #'timestamp= :test #'timestamp<)
       (if node-deleted-p
 	  (values (setf (get-price-history commodity) new-root) t)
 	  (values (get-price-history commodity) nil)))))
