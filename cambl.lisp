@@ -247,8 +247,8 @@
 
 ;;;_* Package
 
-;; (declaim (optimize (safety 1) (speed 3) (space 0)))
-(declaim (optimize (debug 3) (safety 3) (speed 1) (space 0)))
+#-:debug-cambl(declaim (optimize (safety 1) (speed 3) (space 0) (debug 0)))
+#+:debug-cambl(declaim (optimize (safety 0) (speed 0) (space 0) (debug 3) (compilation-speed 0)))
 
 (defpackage :cambl
   (:use :cl :red-black :local-time :periods)
@@ -432,7 +432,7 @@
    (annotation :accessor get-commodity-annotation :initarg :annotation
 	       :type commodity-annotation)))
 
-(declaim (inline annotated-commodity-p))
+#-:debug-cambl(declaim (inline annotated-commodity-p))
 (defun annotated-commodity-p (object)
   (typep object 'annotated-commodity))
 
@@ -475,7 +475,7 @@
 (deftype value ()
   '(or rational amount balance))
 
-(declaim (inline valuep))
+#-:debug-cambl(declaim (inline valuep))
 (defun valuep (object)
   (typep object 'value))
 
@@ -614,15 +614,15 @@
   (read-amount (make-string-input-stream string)
 	       :observe-properties-p nil :pool pool))
 
-(declaim (inline parse-amount))
+#-:debug-cambl(declaim (inline parse-amount))
 (defun parse-amount (&rest args)
   (apply #'amount args))
 
-(declaim (inline parse-amount*))
+#-:debug-cambl(declaim (inline parse-amount*))
 (defun parse-amount* (&rest args)
   (apply #'amount args))
 
-(declaim (inline exact-amount))
+#-:debug-cambl(declaim (inline exact-amount))
 (defun exact-amount (string &key (pool *default-commodity-pool*))
   (declare (type string string))
   (let ((amount (amount* string :pool pool)))
@@ -633,7 +633,7 @@
 
 (defun read-amount-quantity (in)
   (declare (type stream in))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (with-output-to-string (buf nil :element-type 'base-char)
     (let (last-special)
       (loop
@@ -657,7 +657,7 @@
 
 (defun peek-char-in-line (in &optional skip-whitespace)
   (declare (type stream in))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (loop
      for c = (peek-char nil in nil)
      while (and c (char/= c #\Newline)) do
@@ -684,7 +684,7 @@ associated with the given commodity pool.
   [-]NUM[ ]SYM [ANNOTATION]
   SYM[ ][-]NUM [ANNOTATION]"
   (declare (type stream in))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
 
   (let ((connected-p t) (prefixed-p t)
 	symbol quantity details
@@ -793,12 +793,12 @@ associated with the given commodity pool.
 	    ;; precision, as if the user had used `exact-amount'.
 	    quantity)))))
 
-(declaim (inline read-amount*))
+#-:debug-cambl(declaim (inline read-amount*))
 (defun read-amount* (in &key (pool *default-commodity-pool*))
   (declare (type stream in))
   (read-amount in :observe-properties-p nil :pool pool))
 
-(declaim (inline read-exact-amount))
+#-:debug-cambl(declaim (inline read-exact-amount))
 (defun read-exact-amount (in &key (pool *default-commodity-pool*))
   (declare (type stream in))
   (let ((amount (read-amount* in :pool pool)))
@@ -807,7 +807,7 @@ associated with the given commodity pool.
 
 ;;;_  + BALANCE commodity details
 
-(declaim (inline balance))
+#-:debug-cambl(declaim (inline balance))
 (defun balance (&rest amounts)
   ;; Although it may seem inefficient, this is the only way to generate the
   ;; correct value, considering that AMOUNTS may contain duplicated commodity
@@ -815,25 +815,25 @@ associated with the given commodity pool.
   (assert (> (length amounts) 1))
   (reduce #'add amounts))
 
-(declaim (inline balance-commodities))
+#-:debug-cambl(declaim (inline balance-commodities))
 (defun balance-commodities (balance)
   (mapcar #'car (get-amounts-map balance)))
 
-(declaim (inline balance-amounts))
+#-:debug-cambl(declaim (inline balance-amounts))
 (defun balance-amounts (balance)
   (mapcar #'cdr (get-amounts-map balance)))
 
-(declaim (inline balance-first-amount))
+#-:debug-cambl(declaim (inline balance-first-amount))
 (defun balance-first-amount (balance)
   (cdar (get-amounts-map balance)))
 
-(declaim (inline balance-commodity-count))
+#-:debug-cambl(declaim (inline balance-commodity-count))
 (defun balance-commodity-count (balance)
   (length (get-amounts-map balance)))
 
 ;;;_  + Unary truth tests
 
-(declaim (inline value-maybe-round))
+#-:debug-cambl(declaim (inline value-maybe-round))
 (defun value-maybe-round (amount)
   (declare (type amount amount))
   (if (amount-keep-precision-p amount)
@@ -908,12 +908,12 @@ associated with the given commodity pool.
 
 ;;;_  + Commodity equality
 
-(declaim (inline commodity-equal))
+#-:debug-cambl(declaim (inline commodity-equal))
 (defun commodity-equal (a b)
   "Two commodities are EQUAL if they are the same object."
   (eq a b))
 
-(declaim (inline commodity-equalp))
+#-:debug-cambl(declaim (inline commodity-equalp))
 (defun commodity-equalp (a b)
   (eq (if (annotated-commodity-p a)
 	  (get-referent a) a)
@@ -954,7 +954,7 @@ associated with the given commodity pool.
   (verify-amounts left right "Exactly comparing")
   (- (amount-quantity left) (amount-quantity right)))
 
-(declaim (inline sign))
+#-:debug-cambl(declaim (inline sign))
 (defun sign (amount)
   "Return -1, 0 or 1 depending on the sign of AMOUNT."
   (etypecase amount
@@ -1115,37 +1115,37 @@ associated with the given commodity pool.
 
 ;;;_  + Comparison tests
 
-(declaim (inline value-lessp value-lessp*))
+#-:debug-cambl(declaim (inline value-lessp value-lessp*))
 (defun value-lessp (left right)
   (minusp (compare left right)))
 (defun value-lessp* (left right)
   (minusp (compare* left right)))
 
-(declaim (inline value-lesseqp value-lesseqp*))
+#-:debug-cambl(declaim (inline value-lesseqp value-lesseqp*))
 (defun value-lesseqp (left right)
   (<= (compare left right) 0))
 (defun value-lesseqp* (left right)
   (<= (compare* left right) 0))
 
-(declaim (inline value< value<=))
+#-:debug-cambl(declaim (inline value< value<=))
 (defun value< (left right)
   (minusp (compare left right)))
 (defun value<= (left right)
   (<= (compare left right) 0))
 
-(declaim (inline value-greaterp value-greaterp*))
+#-:debug-cambl(declaim (inline value-greaterp value-greaterp*))
 (defun value-greaterp (left right)
   (plusp (compare left right)))
 (defun value-greaterp* (left right)
   (plusp (compare* left right)))
 
-(declaim (inline value-greatereqp value-greatereqp*))
+#-:debug-cambl(declaim (inline value-greatereqp value-greatereqp*))
 (defun value-greatereqp (left right)
   (>= (compare left right) 0))
 (defun value-greatereqp* (left right)
   (>= (compare* left right) 0))
 
-(declaim (inline value> value>=))
+#-:debug-cambl(declaim (inline value> value>=))
 (defun value> (left right)
   (plusp (compare left right)))
 (defun value>= (left right)
@@ -1187,7 +1187,7 @@ associated with the given commodity pool.
   If PRECISION is less than the current internal precision, data will be lost.
 If it is greater, this operation has no effect."
   (declare (type (or fixnum null) precision))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (let ((divisor (and precision
 		      (/ 1 (the integer
 			     (expt 10 (the fixnum precision)))))))
@@ -1224,7 +1224,7 @@ If it is greater, this operation has no effect."
 
 ;;;_  + Find AMOUNT of COMMODITY in a BALANCE
 
-(declaim (inline amount-in-balance))
+#-:debug-cambl(declaim (inline amount-in-balance))
 (defun amount-in-balance (balance commodity)
   (cdr (assoc commodity (get-amounts-map balance)
 	      :test #'commodity-equal)))
@@ -1570,7 +1570,7 @@ If it is greater, this operation has no effect."
   (declare (type boolean full-precision-p))
   (declare (type (or fixnum null) width))
   (declare (ignore latter-width line-feed-string))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
 
   (let* ((commodity (amount-commodity amount))
 	 (commodity-symbol (and (not omit-commodity-p)
@@ -1663,20 +1663,20 @@ If it is greater, this operation has no effect."
 
 ;;;_  - Parse commodity symbols
 
-(declaim (inline symbol-char-invalid-p))
+#-:debug-cambl(declaim (inline symbol-char-invalid-p))
 (defun symbol-char-invalid-p (c)
   (declare (type character c))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (let ((code (char-code c)))
     (and (< code 256)
 	 (aref (the (simple-array boolean (256))
 		 *invalid-symbol-chars*) code))))
 
-(declaim (inline symbol-name-needs-quoting-p))
+#-:debug-cambl(declaim (inline symbol-name-needs-quoting-p))
 (defun symbol-name-needs-quoting-p (name)
   "Return T if the given symbol NAME requires quoting."
   (declare (type string name))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (loop for c across (the simple-string name) do
        (if (symbol-char-invalid-p c)
 	   (return t))))
@@ -1700,7 +1700,7 @@ is an error if EOF is reached without reading the ending double quote.  If the
 symbol name is not quoted, and an invalid character is reading, reading from
 the stream stops and the invalid character is put back."
   (declare (type stream in))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (let ((buf (make-string-output-stream))
 	needs-quoting-p)
     (if (char= #\" (peek-char nil in))
@@ -2135,12 +2135,12 @@ DETAILS, of type COMMODITY-ANNOTATION.
 
 ;;;_  - Read commodity annotation from a stream
 
-(declaim (inline read-until))
+#-:debug-cambl(declaim (inline read-until))
 (defun read-until (in char &optional error-message)
   (declare (type stream in))
   (declare (type character char))
   (declare (type (or string null) error-message))
-  (declare (optimize (speed 3) (safety 0)))
+  #-:debug-cambl(declare (optimize (speed 3) (safety 0)))
   (with-output-to-string (text)
     (loop for c = (read-char in nil)
        while (if c (char/= char c)

@@ -1,6 +1,7 @@
 ;;; fprog.lisp -- Code to support functional programming in Common Lisp
 
-(declaim (optimize (safety 0) (speed 3) (space 1)))
+#-:debug-fprog(declaim (optimize (safety 0) (speed 3) (space 1) (debug 0)))
+#+:debug-fprog(declaim (optimize (safety 0) (speed 0) (space 0) (debug 3) (compilation-speed 0)))
 
 (defpackage :fprog
   (:use :cl)
